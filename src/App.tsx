@@ -99,10 +99,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0F1D] text-[#F8FAFC] flex font-sans overflow-x-hidden relative selection:bg-[#6366F1]/20 selection:text-[#F8FAFC]" id="crime-intel-app-root">
+    <div className="min-h-screen bg-[#F4F6F5] text-[#1E293B] flex font-sans overflow-x-hidden relative selection:bg-[#3B8D72]/20 selection:text-[#1E293B]" id="crime-intel-app-root">
       
       {/* Subtle, premium, non-distracting background shade */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#6366F1]/3 rounded-full blur-[140px] pointer-events-none select-none animate-pulse-slow" />
+      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#3B8D72]/4 rounded-full blur-[120px] pointer-events-none select-none animate-pulse-slow" />
+      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-[#4D7FA9]/3 rounded-full blur-[120px] pointer-events-none select-none" />
 
       {/* Navigation Sidebar Drawer */}
       <Sidebar 
@@ -152,28 +153,28 @@ export default function App() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
                 transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute bottom-16 right-0 w-64 rounded-[24px] liquid-glass p-4 space-y-3 shadow-2xl text-left border border-slate-800/80"
+                className="absolute bottom-16 right-0 w-64 rounded-[24px] liquid-glass p-4 space-y-3 shadow-xl text-left border border-white/80"
               >
-                <div className="flex items-center justify-between border-b border-slate-850 pb-2">
-                  <span className="text-[10px] font-mono tracking-wider font-semibold text-[#94A3B8] uppercase">Quick Command HUD</span>
+                <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                  <span className="text-[10px] font-mono tracking-wider font-semibold text-slate-500 uppercase">Quick Command HUD</span>
                   <button 
                     onClick={() => setIsQuickActionOpen(false)}
-                    className="p-1 hover:bg-slate-900/60 rounded-[10px] text-[#94A3B8] hover:text-[#F8FAFC] transition-colors"
+                    className="p-1 hover:bg-slate-100 rounded-[10px] text-slate-500 hover:text-slate-800 transition-colors"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
                 <div className="space-y-1">
-                  <div className="p-2 hover:bg-[#6366F1]/10 rounded-[14px] text-xs text-[#F8FAFC] flex items-center gap-2.5 cursor-pointer transition-colors group">
-                    <Terminal className="w-4 h-4 text-slate-400 group-hover:text-[#6366F1] transition-colors" />
+                  <div className="p-2 hover:bg-[#3B8D72]/10 rounded-[14px] text-xs text-[#1E293B] flex items-center gap-2.5 cursor-pointer transition-colors group">
+                    <Terminal className="w-4 h-4 text-slate-400 group-hover:text-[#3B8D72] transition-colors" />
                     <span>Run Cryptographic Audit</span>
                   </div>
-                  <div className="p-2 hover:bg-[#6366F1]/10 rounded-[14px] text-xs text-[#F8FAFC] flex items-center gap-2.5 cursor-pointer transition-colors group">
-                    <Activity className="w-4 h-4 text-slate-400 group-hover:text-[#10B981] transition-colors" />
+                  <div className="p-2 hover:bg-[#3B8D72]/10 rounded-[14px] text-xs text-[#1E293B] flex items-center gap-2.5 cursor-pointer transition-colors group">
+                    <Activity className="w-4 h-4 text-slate-400 group-hover:text-[#3B8D72] transition-colors" />
                     <span>Scan Active Patrol Nodes</span>
                   </div>
-                  <div className="p-2 hover:bg-[#6366F1]/10 rounded-[14px] text-xs text-[#F8FAFC] flex items-center gap-2.5 cursor-pointer transition-colors group">
-                    <Key className="w-4 h-4 text-slate-400 group-hover:text-[#F59E0B] transition-colors" />
+                  <div className="p-2 hover:bg-[#3B8D72]/10 rounded-[14px] text-xs text-[#1E293B] flex items-center gap-2.5 cursor-pointer transition-colors group">
+                    <Key className="w-4 h-4 text-slate-400 group-hover:text-[#C0832F] transition-colors" />
                     <span>Request Level-5 Auth Token</span>
                   </div>
                 </div>
@@ -185,11 +186,11 @@ export default function App() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsQuickActionOpen(!isQuickActionOpen)}
-            className="w-12 h-12 rounded-full liquid-glass text-[#F8FAFC] hover:text-[#6366F1] flex items-center justify-center shadow-xl border border-slate-800/80 group"
+            className="w-12 h-12 rounded-full liquid-glass text-[#1E293B] hover:text-[#3B8D72] flex items-center justify-center shadow-lg border border-white/90 group"
             aria-label="Quick action launcher"
             id="floating-quick-action-btn"
           >
-            <Plus className={`w-5 h-5 transition-transform duration-200 group-hover:text-[#6366F1] ${isQuickActionOpen ? 'rotate-45 text-[#6366F1]' : ''}`} />
+            <Plus className={`w-5 h-5 transition-transform duration-200 group-hover:text-[#3B8D72] ${isQuickActionOpen ? 'rotate-45 text-[#3B8D72]' : ''}`} />
           </motion.button>
         </div>
 
