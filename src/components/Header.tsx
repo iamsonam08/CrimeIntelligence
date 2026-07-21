@@ -15,16 +15,30 @@ interface HeaderProps {
 
 export function Header({ 
   onMenuToggle, 
-  title = "CrimeOps Dashboard", 
-  subtitle = "AI-Powered Crime Intelligence Platform" 
+  title = "CrimeOps Dashboard" 
 }: HeaderProps) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [formattedDate, setFormattedDate] = useState("");
 
   const notificationsRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  // Live Date and Time Clock
+  useEffect(() => {
+    const updateDate = () => {
+      const d = new Date();
+      const options: Intl.DateTimeFormatOptions = { month: 'short', day: '2-digit', year: 'numeric' };
+      const dateStr = d.toLocaleDateString('en-US', options).toUpperCase();
+      const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      setFormattedDate(`${dateStr} • ${timeStr}`);
+    };
+    updateDate();
+    const timer = setInterval(updateDate, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Close dropdowns on outside clicks
   useEffect(() => {
@@ -47,7 +61,7 @@ export function Header({
       title: 'Database Sync Completed',
       desc: 'National criminal index synchronized successfully.',
       time: '2m ago',
-      icon: <Terminal className="w-3.5 h-3.5 text-[#2563EB]" />
+      icon: <Terminal className="w-3.5 h-3.5 text-[#6366F1]" />
     },
     {
       id: 2,
@@ -63,53 +77,95 @@ export function Header({
       title: 'Security Clearance Audit',
       desc: 'Officer Smith session authenticated.',
       time: '1h ago',
-      icon: <Fingerprint className="w-3.5 h-3.5 text-[#22C55E]" />
+      icon: <Fingerprint className="w-3.5 h-3.5 text-[#10B981]" />
     }
   ];
 
+  // Map title to active node for the breadcrumb indicator
+  const getActiveNode = (titleStr: string) => {
+    const t = titleStr.toLowerCase();
+    if (t.includes('dashboard')) return 'DASHBOARD';
+    if (t.includes('mapping') || t.includes('map')) return 'GIS_MAPPING';
+    if (t.includes('network') || t.includes('criminal')) return 'LINK_ANALYSIS';
+    if (t.includes('predictive') || t.includes('prediction')) return 'FORECAST_ENGINE';
+    if (t.includes('incident') || t.includes('dispatch') || t.includes('alerts')) return 'CAD_DISPATCH';
+    if (t.includes('security') || t.includes('settings')) return 'SYSTEM_SETTINGS';
+    return 'SYSTEM_NODE';
+  };
+  const activeNode = getActiveNode(title);
+
   return (
-    <header className="flex items-center justify-between border-b border-slate-900/60 pb-6 mb-8 gap-4 relative" id="app-header">
+    <header className="flex flex-col lg:flex-row lg:items-start justify-between border-b border-slate-900/60 pb-8 mb-8 gap-6 relative" id="app-header">
       {/* Page Info & Mobile Menu Toggle */}
-      <div className="flex items-center gap-4 md:gap-0">
+      <div className="flex items-start gap-4 flex-1">
         {/* Mobile Menu Trigger */}
         <button
           onClick={onMenuToggle}
-          className="md:hidden p-2.5 rounded-[18px] bg-[#141C2F] border border-slate-800 text-[#94A3B8] hover:text-[#F8FAFC] hover:border-slate-700 transition-all duration-200"
+          className="md:hidden mt-1.5 p-2.5 rounded-[18px] bg-[#141C2F] border border-slate-800 text-[#94A3B8] hover:text-[#F8FAFC] hover:border-slate-700 transition-all duration-200"
           aria-label="Open sidebar"
           id="mobile-menu-toggle-btn"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="space-y-1 text-left">
-          <h2 className="text-xl md:text-2xl font-sans font-bold text-[#F8FAFC] tracking-tight leading-none bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-            {title}
-          </h2>
-          <p className="text-xs text-[#94A3B8] font-sans font-medium tracking-wide">
-            {subtitle}
-          </p>
+        <div className="space-y-3.5 text-left flex-1">
+          {/* Top Label */}
+          <span className="text-[10px] font-mono tracking-[0.25em] text-[#6366F1] font-bold uppercase block leading-none">
+            REAL-TIME CRIME INTELLIGENCE
+          </span>
+          
+          {/* Main Heading & Breadcrumb Node */}
+          <div className="flex items-center gap-3.5 flex-wrap">
+            <h2 className="text-3xl md:text-4xl font-sans font-extrabold tracking-tight text-[#F8FAFC] leading-none select-none">
+              Crime<span className="font-semibold text-[#6366F1]">Ops</span>
+            </h2>
+            
+            {/* Elegant active node indicator */}
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-[12px] bg-slate-950 border border-slate-900 font-mono text-[9px] text-[#94A3B8] font-bold tracking-wider select-none shadow-inner">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+              {activeNode}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            {/* Subtitle */}
+            <p className="text-sm font-sans font-bold text-slate-200 tracking-wide leading-none">
+              AI-Powered Crime Intelligence Platform
+            </p>
+
+            {/* Core platform description */}
+            <p className="text-xs text-[#94A3B8] max-w-3xl leading-relaxed font-sans font-medium">
+              Monitor crime trends, identify criminal networks, predict emerging threats, and support data-driven policing through one unified intelligence platform.
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Right Side Tools & Profile */}
-      <div className="flex items-center gap-3 relative z-30">
+      <div className="flex flex-wrap items-center gap-3.5 lg:self-start z-30">
         
-        {/* Search Input Box with Soft Neumorphism */}
+        {/* Current Date & Time Pill */}
+        <div className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-[22px] bg-slate-950/40 border border-slate-900 font-mono text-[9.5px] text-[#94A3B8] tracking-wider select-none shadow-inner">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#6366F1] animate-pulse" />
+          <span>{formattedDate}</span>
+        </div>
+
+        {/* Search Input Box with Liquid Glass & Soft Neumorphism */}
         <div className="relative hidden md:block">
-          <div className={`flex items-center gap-2 rounded-[20px] px-4 py-2 w-64 text-[#94A3B8] transition-all duration-300 ${
+          <div className={`flex items-center gap-2.5 rounded-[22px] px-4.5 py-2.5 w-72 text-[#94A3B8] transition-all duration-300 ${
             isSearchFocused 
-              ? 'bg-[#0A0F1D] border-[#6366F1]/40 ring-1 ring-[#6366F1]/20 shadow-[0_0_15px_rgba(99,102,241,0.1)]' 
-              : 'soft-neumorphic-input'
+              ? 'bg-[#0A0F1D]/80 border-[#6366F1]/50 ring-1 ring-[#6366F1]/30 shadow-[0_0_25px_rgba(99,102,241,0.15)] backdrop-blur-md' 
+              : 'liquid-glass border border-slate-900 shadow-md hover:border-slate-800'
           }`}>
             <Search className="w-4 h-4 text-slate-500" />
             <input 
               type="text" 
-              placeholder="Search Intelligence..." 
+              placeholder="Search crimes, suspects, locations..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              className="bg-transparent text-xs text-[#F8FAFC] placeholder-slate-500 focus:outline-none w-full"
+              className="bg-transparent text-xs text-[#F8FAFC] placeholder-slate-500 focus:outline-none w-full font-sans"
               id="search-intelligence-input"
             />
             <kbd className="text-[9px] font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 text-slate-500 select-none">⌘K</kbd>
@@ -123,7 +179,7 @@ export function Header({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.15 }}
-                className="absolute top-11 left-0 w-full rounded-[24px] liquid-glass p-4 z-50 text-left space-y-2 border border-slate-800/80 shadow-2xl"
+                className="absolute top-12 left-0 w-full rounded-[24px] liquid-glass p-4 z-50 text-left space-y-2 border border-slate-800/80 shadow-2xl"
               >
                 <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest pl-1">Suggested Nodes</div>
                 <div className="space-y-1">
@@ -145,13 +201,11 @@ export function Header({
         <div className="relative" ref={notificationsRef}>
           <button 
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className="relative p-2.5 rounded-[18px] soft-neumorphic text-[#94A3B8] hover:text-[#F8FAFC] hover:border-slate-800 transition-all duration-200 group"
+            className="relative p-2.5 rounded-[22px] soft-neumorphic text-[#94A3B8] hover:text-[#F8FAFC] hover:border-slate-800 transition-all duration-200 group"
             aria-label="System Notifications"
             id="header-notification-btn"
           >
             <Bell className="w-4.5 h-4.5 transition-transform duration-200 group-hover:scale-105" />
-            
-            {/* Notification Indicator Dot (Coral Red) */}
             <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#F43F5E] border border-[#0A0F1D]" />
           </button>
 
@@ -199,25 +253,25 @@ export function Header({
           </AnimatePresence>
         </div>
 
-        {/* Profile Placeholder Badge with Liquid Glass dropdown */}
+        {/* Profile Badge with Liquid Glass dropdown */}
         <div className="relative" ref={profileRef}>
           <div 
             onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="flex items-center gap-2.5 p-1.5 pr-4 bg-[#141C2F] border border-slate-800 rounded-[18px] cursor-pointer hover:border-slate-700 transition-colors duration-200"
+            className="flex items-center gap-3 p-1.5 pr-4 bg-slate-950/40 border border-slate-900 rounded-[22px] cursor-pointer hover:border-[#6366F1]/30 transition-all duration-300 shadow-md hover:bg-[#141C2F]/20 select-none"
             id="header-profile-badge"
           >
             {/* Avatar frame */}
-            <div className="relative w-8 h-8 rounded-[12px] bg-slate-950 border border-slate-800 flex items-center justify-center font-mono text-xs font-bold text-[#F8FAFC] select-none shadow-sm">
+            <div className="relative w-8.5 h-8.5 rounded-[12px] bg-slate-950 border border-slate-800 flex items-center justify-center font-mono text-[11px] font-bold text-[#F8FAFC] select-none shadow-inner">
               CI
-              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#10B981] border border-[#0A0F1D]" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#10B981] border-2 border-[#0A0F1D]" />
             </div>
 
             <div className="hidden sm:block text-left">
               <div className="flex items-center gap-1 leading-none">
-                <span className="text-xs font-sans font-semibold text-[#F8FAFC] truncate">Officer Smith</span>
+                <span className="text-xs font-sans font-bold text-[#F8FAFC]">Officer Smith</span>
                 <BadgeCheck className="w-3.5 h-3.5 text-[#6366F1] flex-shrink-0" />
               </div>
-              <p className="text-[9px] font-mono tracking-wider text-slate-500 mt-0.5">UNIT_CMD_01</p>
+              <p className="text-[9px] font-mono tracking-wider text-slate-500 mt-0.5">Crime Analyst</p>
             </div>
           </div>
 
