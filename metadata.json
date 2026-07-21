@@ -1,0 +1,6 @@
+{
+  "name": "Crime Intelligence Dashboard",
+  "description": "A premium, enterprise-level Crime Intelligence Dashboard for police departments.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
