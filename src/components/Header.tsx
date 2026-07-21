@@ -15,8 +15,8 @@ interface HeaderProps {
 
 export function Header({ 
   onMenuToggle, 
-  title = "Crime Intelligence Dashboard", 
-  subtitle = "Real-Time Crime Analysis & Predictive Monitoring" 
+  title = "CrimeOps Dashboard", 
+  subtitle = "AI-Powered Crime Intelligence Platform" 
 }: HeaderProps) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);

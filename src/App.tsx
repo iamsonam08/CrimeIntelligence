@@ -41,8 +41,8 @@ export default function App() {
     switch (activePage) {
       case 'dashboard':
         return {
-          title: "Crime Intelligence Dashboard",
-          subtitle: "Real-Time Crime Analysis & Predictive Monitoring"
+          title: "CrimeOps Dashboard",
+          subtitle: "AI-Powered Crime Intelligence Platform"
         };
       case 'crime-map':
         return {
@@ -71,8 +71,8 @@ export default function App() {
         };
       default:
         return {
-          title: "Crime Intelligence Dashboard",
-          subtitle: "Real-Time Crime Analysis & Predictive Monitoring"
+          title: "CrimeOps Dashboard",
+          subtitle: "AI-Powered Crime Intelligence Platform"
         };
     }
   };

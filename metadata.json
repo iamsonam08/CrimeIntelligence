@@ -1,6 +1,6 @@
 {
-  "name": "Crime Intelligence Dashboard",
-  "description": "A premium, enterprise-level Crime Intelligence Dashboard for police departments.",
+  "name": "CrimeOps",
+  "description": "AI-Powered Crime Intelligence Platform",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

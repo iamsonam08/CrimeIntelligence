@@ -59,12 +59,29 @@ export function Sidebar({ activePage, onPageChange, isOpen = false, onClose }: S
       <div className="flex items-center justify-between mb-8 pb-5 border-b border-slate-900/60">
         <div className="flex items-center gap-3">
           {/* Logo Container */}
-          <div className="flex items-center justify-center w-9 h-9 rounded-[14px] bg-slate-950 border border-slate-800 shadow-inner select-none">
-            <Shield className="w-5 h-5 text-[#6366F1]" />
+          <div className="flex items-center justify-center w-9 h-9 rounded-[12px] bg-slate-950 border border-slate-850 shadow-inner select-none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5 text-[#6366F1]" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              {/* Outer hexagonal secure boundary */}
+              <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" className="opacity-25" fill="currentColor" fillOpacity="0.04" />
+              {/* Intersecting intelligence radar/nodes structure representing a 'C' and 'O' */}
+              <path d="M12 6.5C9.24 6.5 7 8.74 7 11.5C7 14.26 9.24 16.5 12 16.5" strokeWidth="2" stroke="currentColor" />
+              <circle cx="12" cy="11.5" r="3.5" strokeWidth="1.5" stroke="currentColor" />
+              <circle cx="12" cy="11.5" r="1" fill="#6366F1" stroke="none" />
+              {/* Connected neural nodes */}
+              <line x1="12" y1="2" x2="12" y2="6.5" strokeDasharray="1.5 1.5" />
+              <line x1="12" y1="16.5" x2="12" y2="22" strokeDasharray="1.5 1.5" />
+              <line x1="2" y1="11.5" x2="7" y2="11.5" strokeDasharray="1.5 1.5" />
+              <line x1="17" y1="11.5" x2="22" y2="11.5" strokeDasharray="1.5 1.5" />
+              <circle cx="12" cy="6.5" r="1.25" fill="#6366F1" stroke="none" />
+              <circle cx="12" cy="16.5" r="1.25" fill="#6366F1" stroke="none" />
+              <circle cx="7" cy="11.5" r="1.25" fill="#6366F1" stroke="none" />
+              <circle cx="17" cy="11.5" r="1.25" fill="#6366F1" stroke="none" />
+            </svg>
           </div>
-          <div className="text-left">
-            <h1 className="text-[10px] font-mono tracking-widest text-[#94A3B8] uppercase font-bold leading-none mb-1">CRIME</h1>
-            <p className="text-sm font-sans font-bold text-[#F8FAFC] tracking-tight leading-none bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Intelligence</p>
+          <div className="select-none flex items-center">
+            <span className="text-lg font-sans font-extrabold tracking-tight text-[#F8FAFC]">
+              Crime<span className="font-semibold text-[#6366F1]">Ops</span>
+            </span>
           </div>
         </div>
 
