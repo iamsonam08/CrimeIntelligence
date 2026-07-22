@@ -46,7 +46,11 @@ import {
   AlertCircle,
   Info,
   ShieldCheck,
-  Trash2
+  Trash2,
+  Sun,
+  Moon,
+  Monitor,
+  Palette
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -2045,11 +2049,32 @@ export function AlertsView() {
 /* -------------------------------------------------------------
  * 5. SYSTEM SETTINGS VIEW (AGENCY PARAMETERS & CLEARANCE MODULE)
  * ------------------------------------------------------------- */
-export function SettingsView() {
+interface SettingsViewProps {
+  activeTab?: "security" | "appearance";
+  onTabChange?: (tab: "security" | "appearance") => void;
+  savedTheme?: "light" | "dark" | "system";
+  onThemeSave?: (theme: "light" | "dark" | "system") => void;
+}
+
+export function SettingsView({
+  activeTab = "security",
+  onTabChange,
+  savedTheme = "light",
+  onThemeSave
+}: SettingsViewProps) {
   const [telemetryFrequency, setTelemetryFrequency] = useState<number>(30);
   const [biometricPass, setBiometricPass] = useState("");
   const [isCredentialActive, setIsCredentialActive] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+
+  // Theme selection state for the edit session
+  const [selectedTheme, setSelectedTheme] = useState<"light" | "dark" | "system">(savedTheme);
+  const [themeSuccessMsg, setThemeSuccessMsg] = useState<string | null>(null);
+
+  // Sync selectedTheme if savedTheme props updates
+  useEffect(() => {
+    setSelectedTheme(savedTheme);
+  }, [savedTheme]);
 
   const handleUpdateBiometric = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2070,152 +2095,390 @@ export function SettingsView() {
     >
       <div className="premium-card p-6 min-h-[500px] flex flex-col justify-between shadow-sm">
         
-        {/* Header Section */}
-        <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
-          <div className="p-2.5 rounded-[14px] bg-white border border-slate-200/60 shadow-sm">
-            <Settings className="w-5 h-5 text-[#3B8D72]" />
-          </div>
-          <div className="text-left">
-            <h3 className="text-base font-sans font-bold text-slate-800 tracking-tight">System Security & Access Controls</h3>
-            <p className="text-xs text-slate-450 font-sans font-semibold">Manage Police Agency Integration Channels, Biometrics, and Sync Telemetry</p>
-          </div>
-        </div>
-
-        {/* Setting Modules Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 flex-1 text-left">
-          
-          {/* Clearance Config Card */}
-          <div className="p-5 soft-neumorphic rounded-[24px] flex flex-col justify-between relative overflow-hidden group">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2.5">
-                <Lock className="w-4 h-4 text-[#C0832F]" />
-                <h4 className="text-xs font-mono uppercase tracking-widest font-extrabold text-slate-800">Clearance Biometric Keys</h4>
-              </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
-                Establish secure encryption passkeys to query national databases. Security protocols automatically terminate inactive officer sessions.
-              </p>
-
-              {statusMsg && (
-                <div className="p-2.5 rounded-[14px] bg-[#3B8D72]/10 border border-[#3B8D72]/30 text-[#3B8D72] text-[10px] font-sans font-bold flex items-center gap-1.5 shadow-sm">
-                  <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{statusMsg}</span>
-                </div>
+        {/* Header Section with Tab Switcher */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div className="flex items-center gap-3 text-left">
+            <div className="p-2.5 rounded-[14px] bg-white border border-slate-200/60 shadow-sm">
+              {activeTab === "appearance" ? (
+                <Palette className="w-5 h-5 text-[#3B8D72]" />
+              ) : (
+                <Settings className="w-5 h-5 text-[#3B8D72]" />
               )}
-
-              <form onSubmit={handleUpdateBiometric} className="space-y-2.5 pt-1">
-                <input 
-                  type="password" 
-                  placeholder="Enter cryptographic clearance key..." 
-                  value={biometricPass}
-                  onChange={(e) => setBiometricPass(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 rounded-[20px] focus:outline-none focus:border-[#3B8D72]/50 shadow-inner"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-white border border-slate-200 text-slate-700 font-sans font-bold text-xs py-2.5 rounded-[18px] hover:border-slate-350 hover:bg-slate-50 transition-all shadow-sm"
-                >
-                  Configure Cryptographic Key
-                </button>
-              </form>
             </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[9px] font-mono text-slate-400 font-bold">
-              <span className="flex items-center gap-1"><UserCheck className="w-3.5 h-3.5 text-slate-400" /> POLICY ACCESS: STABLE</span>
-              <span className="text-slate-500">ROLE: CMD_OFFICER</span>
-            </div>
-          </div>
-
-          {/* Database Ingest Pipelines */}
-          <div className="p-5 soft-neumorphic rounded-[24px] flex flex-col justify-between relative overflow-hidden group">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2.5">
-                <Key className="w-4 h-4 text-[#3B8D72]" />
-                <h4 className="text-xs font-mono uppercase tracking-widest font-extrabold text-slate-800">API Node Connectors</h4>
-              </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
-                Review integration pipes syncing intelligence files from federal networks, state dispatch systems, and county registries.
+            <div className="text-left">
+              <h3 className="text-base font-sans font-bold text-slate-800 tracking-tight">
+                {activeTab === "appearance" ? "Appearance" : "System Security & Access Controls"}
+              </h3>
+              <p className="text-xs text-slate-450 font-sans font-semibold">
+                {activeTab === "appearance" 
+                  ? "Choose how CrimeOps appears on your device." 
+                  : "Manage Police Agency Integration Channels, Biometrics, and Sync Telemetry"}
               </p>
-
-              <div className="space-y-2 pt-1">
-                <div className="p-2.5 bg-white border border-slate-200 rounded-[14px] flex items-center justify-between shadow-sm">
-                  <span className="text-xs font-sans font-bold text-slate-700">FED_CENTRAL_DB</span>
-                  <span className="text-[8.5px] font-mono px-2 py-0.5 bg-[#3B8D72]/10 border border-[#3B8D72]/20 text-[#3B8D72] rounded-full font-extrabold">ACTIVE</span>
-                </div>
-                <div className="p-2.5 bg-white border border-slate-200 rounded-[14px] flex items-center justify-between shadow-sm">
-                  <span className="text-xs font-sans font-bold text-slate-700">REGIONAL_CAD_LINK</span>
-                  <span className="text-[8.5px] font-mono px-2 py-0.5 bg-[#3B8D72]/10 border border-[#3B8D72]/20 text-[#3B8D72] rounded-full font-extrabold">ACTIVE</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[9px] font-mono text-slate-400 font-bold">
-              <span className="flex items-center gap-1"><Database className="w-3.5 h-3.5 text-slate-400" /> 5 CORE CHANNELS ACTIVE</span>
-              <span className="text-[#3B8D72] hover:underline cursor-pointer">MANAGE APIS</span>
             </div>
           </div>
 
-          {/* Telemetry settings */}
-          <div className="p-5 soft-neumorphic rounded-[24px] flex flex-col justify-between relative overflow-hidden group">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2.5">
-                <Activity className="w-4 h-4 text-[#3B8D72]" />
-                <h4 className="text-xs font-mono uppercase tracking-widest font-extrabold text-slate-800">Telemetry Sync Rate</h4>
-              </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
-                Adjust precision and polling intervals for live geofencing maps and terminal query synchronizations. Lower intervals require wider channels.
-              </p>
-
-              <div className="p-3.5 bg-white border border-slate-200 rounded-[20px] space-y-2 shadow-inner">
-                <div className="flex items-center justify-between text-[9px] font-mono text-slate-400">
-                  <span>Replication Polling Frequency</span>
-                  <span className="text-[#3B8D72] font-bold">{telemetryFrequency} Seconds</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="5" 
-                  max="120" 
-                  value={telemetryFrequency}
-                  onChange={(e) => setTelemetryFrequency(parseInt(e.target.value))}
-                  className="w-full accent-[#3B8D72] bg-slate-200 h-1 rounded-[20px] focus:outline-none cursor-pointer"
-                />
-              </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[9px] font-mono text-slate-400 font-bold">
-              <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5 text-slate-400" /> SECURE TUNING ACTIVE</span>
-              <span className="text-[#3B8D72] hover:underline cursor-pointer">RE-CALIBRATE</span>
-            </div>
+          {/* Premium Segmented Controls / Tab Selector */}
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-[14px] border border-slate-200 shadow-inner">
+            <button
+              onClick={() => onTabChange?.("security")}
+              className={`px-3.5 py-1.5 text-[10px] font-mono rounded-[10px] transition-all duration-200 font-bold cursor-pointer ${
+                activeTab === "security" 
+                  ? 'bg-white border border-slate-200 text-[#1E293B] shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              SECURITY & ACCESS
+            </button>
+            <button
+              onClick={() => onTabChange?.("appearance")}
+              className={`px-3.5 py-1.5 text-[10px] font-mono rounded-[10px] transition-all duration-200 font-bold cursor-pointer ${
+                activeTab === "appearance" 
+                  ? 'bg-white border border-slate-200 text-[#1E293B] shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              APPEARANCE
+            </button>
           </div>
-
-          {/* Cryptographic Audit Trail logs */}
-          <div className="p-5 soft-neumorphic rounded-[24px] flex flex-col justify-between relative overflow-hidden group">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2.5">
-                <Terminal className="w-4 h-4 text-slate-450" />
-                <h4 className="text-xs font-mono uppercase tracking-widest font-extrabold text-slate-800">Cryptographic Ledger Audits</h4>
-              </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
-                All incident broadcasts and clearance modifications are cryptographically sealed and written permanently into regional oversight files.
-              </p>
-
-              <div className="p-3 bg-white border border-slate-200 rounded-[18px] text-[10px] font-mono text-slate-400 font-bold space-y-1 shadow-inner">
-                <div className="truncate">LOG: CLEARANCE_KEY_ROTATED // AUTH: SMITH_RJ</div>
-                <div className="truncate">LOG: REGIONAL_CAD_POLLING // SUCCESSFUL_SYNC</div>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[9px] font-mono text-slate-400 font-bold">
-              <span className="flex items-center gap-1"><FileCheck className="w-3.5 h-3.5 text-slate-400" /> TAMPER-EVIDENT ACTIVATED</span>
-              <span className="text-[#3B8D72] hover:underline cursor-pointer">EXPORT COPIES</span>
-            </div>
-          </div>
-
         </div>
+
+        {activeTab === "security" ? (
+          /* original security modules grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 flex-1 text-left">
+            
+            {/* Clearance Config Card */}
+            <div className="p-5 soft-neumorphic rounded-[24px] flex flex-col justify-between relative overflow-hidden group">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5">
+                  <Lock className="w-4 h-4 text-[#C0832F]" />
+                  <h4 className="text-xs font-mono uppercase tracking-widest font-extrabold text-slate-800">Clearance Biometric Keys</h4>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
+                  Establish secure encryption passkeys to query national databases. Security protocols automatically terminate inactive officer sessions.
+                </p>
+
+                {statusMsg && (
+                  <div className="p-2.5 rounded-[14px] bg-[#3B8D72]/10 border border-[#3B8D72]/30 text-[#3B8D72] text-[10px] font-sans font-bold flex items-center gap-1.5 shadow-sm">
+                    <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>{statusMsg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleUpdateBiometric} className="space-y-2.5 pt-1">
+                  <input 
+                    type="password" 
+                    placeholder="Enter cryptographic clearance key..." 
+                    value={biometricPass}
+                    onChange={(e) => setBiometricPass(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 rounded-[20px] focus:outline-none focus:border-[#3B8D72]/50 shadow-inner"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="w-full bg-white border border-slate-200 text-slate-700 font-sans font-bold text-xs py-2.5 rounded-[18px] hover:border-slate-350 hover:bg-slate-50 transition-all shadow-sm"
+                  >
+                    Configure Cryptographic Key
+                  </button>
+                </form>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[9px] font-mono text-slate-400 font-bold">
+                <span className="flex items-center gap-1"><UserCheck className="w-3.5 h-3.5 text-slate-400" /> POLICY ACCESS: STABLE</span>
+                <span className="text-slate-500">ROLE: CMD_OFFICER</span>
+              </div>
+            </div>
+
+            {/* Database Ingest Pipelines */}
+            <div className="p-5 soft-neumorphic rounded-[24px] flex flex-col justify-between relative overflow-hidden group">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5">
+                  <Key className="w-4 h-4 text-[#3B8D72]" />
+                  <h4 className="text-xs font-mono uppercase tracking-widest font-extrabold text-slate-800">API Node Connectors</h4>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
+                  Review integration pipes syncing intelligence files from federal networks, state dispatch systems, and county registries.
+                </p>
+
+                <div className="space-y-2 pt-1">
+                  <div className="p-2.5 bg-white border border-slate-200 rounded-[14px] flex items-center justify-between shadow-sm">
+                    <span className="text-xs font-sans font-bold text-slate-700">FED_CENTRAL_DB</span>
+                    <span className="text-[8.5px] font-mono px-2 py-0.5 bg-[#3B8D72]/10 border border-[#3B8D72]/20 text-[#3B8D72] rounded-full font-extrabold">ACTIVE</span>
+                  </div>
+                  <div className="p-2.5 bg-white border border-slate-200 rounded-[14px] flex items-center justify-between shadow-sm">
+                    <span className="text-xs font-sans font-bold text-slate-700">REGIONAL_CAD_LINK</span>
+                    <span className="text-[8.5px] font-mono px-2 py-0.5 bg-[#3B8D72]/10 border border-[#3B8D72]/20 text-[#3B8D72] rounded-full font-extrabold">ACTIVE</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[9px] font-mono text-slate-400 font-bold">
+                <span className="flex items-center gap-1"><Database className="w-3.5 h-3.5 text-slate-400" /> 5 CORE CHANNELS ACTIVE</span>
+                <span className="text-[#3B8D72] hover:underline cursor-pointer">MANAGE APIS</span>
+              </div>
+            </div>
+
+            {/* Telemetry settings */}
+            <div className="p-5 soft-neumorphic rounded-[24px] flex flex-col justify-between relative overflow-hidden group">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5">
+                  <Activity className="w-4 h-4 text-[#3B8D72]" />
+                  <h4 className="text-xs font-mono uppercase tracking-widest font-extrabold text-slate-800">Telemetry Sync Rate</h4>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
+                  Adjust precision and polling intervals for live geofencing maps and terminal query synchronizations. Lower intervals require wider channels.
+                </p>
+
+                <div className="p-3.5 bg-white border border-slate-200 rounded-[20px] space-y-2 shadow-inner">
+                  <div className="flex items-center justify-between text-[9px] font-mono text-slate-400">
+                    <span>Replication Polling Frequency</span>
+                    <span className="text-[#3B8D72] font-bold">{telemetryFrequency} Seconds</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="5" 
+                    max="120" 
+                    value={telemetryFrequency}
+                    onChange={(e) => setTelemetryFrequency(parseInt(e.target.value))}
+                    className="w-full accent-[#3B8D72] bg-slate-200 h-1 rounded-[20px] focus:outline-none cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[9px] font-mono text-slate-400 font-bold">
+                <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5 text-slate-400" /> SECURE TUNING ACTIVE</span>
+                <span className="text-[#3B8D72] hover:underline cursor-pointer">RE-CALIBRATE</span>
+              </div>
+            </div>
+
+            {/* Cryptographic Audit Trail logs */}
+            <div className="p-5 soft-neumorphic rounded-[24px] flex flex-col justify-between relative overflow-hidden group">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5">
+                  <Terminal className="w-4 h-4 text-slate-450" />
+                  <h4 className="text-xs font-mono uppercase tracking-widest font-extrabold text-slate-800">Cryptographic Ledger Audits</h4>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
+                  All incident broadcasts and clearance modifications are cryptographically sealed and written permanently into regional oversight files.
+                </p>
+
+                <div className="p-3 bg-white border border-slate-200 rounded-[18px] text-[10px] font-mono text-slate-400 font-bold space-y-1 shadow-inner">
+                  <div className="truncate">LOG: CLEARANCE_KEY_ROTATED // AUTH: SMITH_RJ</div>
+                  <div className="truncate">LOG: REGIONAL_CAD_POLLING // SUCCESSFUL_SYNC</div>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[9px] font-mono text-slate-400 font-bold">
+                <span className="flex items-center gap-1"><FileCheck className="w-3.5 h-3.5 text-slate-400" /> TAMPER-EVIDENT ACTIVATED</span>
+                <span className="text-[#3B8D72] hover:underline cursor-pointer">EXPORT COPIES</span>
+              </div>
+            </div>
+
+          </div>
+        ) : (
+          /* beautiful Appearance Configuration page */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 my-6 flex-1 text-left items-stretch">
+            
+            {/* Left side: options */}
+            <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
+              <div className="space-y-5">
+                <div className="space-y-1.5">
+                  <h4 className="text-xs font-mono uppercase tracking-widest font-extrabold text-slate-800">
+                    Application Theme
+                  </h4>
+                  <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
+                    Configure the primary visual style for the dashboard. Light theme utilizes our signature high-contrast classic layout, while Dark theme provides an eye-safe charcoal-based command environment.
+                  </p>
+                </div>
+
+                {themeSuccessMsg && (
+                  <div className="p-3.5 rounded-[16px] bg-[#3B8D72]/10 border border-[#3B8D72]/30 text-[#3B8D72] text-xs font-sans font-bold flex items-center gap-2 shadow-sm">
+                    <CheckCircle2 className="w-4.5 h-4.5 flex-shrink-0" />
+                    <span>{themeSuccessMsg}</span>
+                  </div>
+                )}
+
+                {/* Theme Selector segmented card options */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  
+                  {/* Light theme */}
+                  <motion.div
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => setSelectedTheme("light")}
+                    className={`p-5 rounded-[22px] border cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-3.5 text-center relative select-none shadow-sm ${
+                      selectedTheme === "light"
+                        ? "bg-white border-[#3B8D72] ring-1 ring-[#3B8D72]/20 shadow-[0_4px_12px_rgba(59,141,114,0.08)]"
+                        : "bg-white/60 border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    {selectedTheme === "light" && (
+                      <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-[#3B8D72] flex items-center justify-center text-white shadow-sm">
+                        <Check className="w-2.5 h-2.5" />
+                      </div>
+                    )}
+                    <div className={`p-3 rounded-full border transition-all duration-300 ${
+                      selectedTheme === "light" ? "bg-[#3B8D72]/10 border-[#3B8D72]/20 text-[#3B8D72]" : "bg-slate-50 border-slate-200 text-slate-500"
+                    }`}>
+                      <Sun className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-sans font-bold text-slate-800">☀️ Light</div>
+                      <div className="text-[9px] font-mono text-slate-400">Classic Crisp Theme</div>
+                    </div>
+                  </motion.div>
+
+                  {/* Dark theme */}
+                  <motion.div
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => setSelectedTheme("dark")}
+                    className={`p-5 rounded-[22px] border cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-3.5 text-center relative select-none shadow-sm ${
+                      selectedTheme === "dark"
+                        ? "bg-white border-[#3B8D72] ring-1 ring-[#3B8D72]/20 shadow-[0_4px_12px_rgba(59,141,114,0.08)]"
+                        : "bg-white/60 border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    {selectedTheme === "dark" && (
+                      <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-[#3B8D72] flex items-center justify-center text-white shadow-sm">
+                        <Check className="w-2.5 h-2.5" />
+                      </div>
+                    )}
+                    <div className={`p-3 rounded-full border transition-all duration-300 ${
+                      selectedTheme === "dark" ? "bg-[#3B8D72]/10 border-[#3B8D72]/20 text-[#3B8D72]" : "bg-slate-50 border-slate-200 text-slate-500"
+                    }`}>
+                      <Moon className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-sans font-bold text-slate-800">🌙 Dark</div>
+                      <div className="text-[9px] font-mono text-slate-400">Tactical Charcoal</div>
+                    </div>
+                  </motion.div>
+
+                  {/* System theme */}
+                  <motion.div
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => setSelectedTheme("system")}
+                    className={`p-5 rounded-[22px] border cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-3.5 text-center relative select-none shadow-sm ${
+                      selectedTheme === "system"
+                        ? "bg-white border-[#3B8D72] ring-1 ring-[#3B8D72]/20 shadow-[0_4px_12px_rgba(59,141,114,0.08)]"
+                        : "bg-white/60 border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    {selectedTheme === "system" && (
+                      <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-[#3B8D72] flex items-center justify-center text-white shadow-sm">
+                        <Check className="w-2.5 h-2.5" />
+                      </div>
+                    )}
+                    <div className={`p-3 rounded-full border transition-all duration-300 ${
+                      selectedTheme === "system" ? "bg-[#3B8D72]/10 border-[#3B8D72]/20 text-[#3B8D72]" : "bg-slate-50 border-slate-200 text-slate-500"
+                    }`}>
+                      <Monitor className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-sans font-bold text-slate-800">💻 System</div>
+                      <div className="text-[9px] font-mono text-slate-400">Match Device Settings</div>
+                    </div>
+                  </motion.div>
+
+                </div>
+              </div>
+
+              {/* Bottom buttons inside Options Column */}
+              <div className="flex gap-3 pt-6 border-t border-slate-100 justify-end w-full">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedTheme(savedTheme);
+                    onTabChange?.("security");
+                  }}
+                  className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-sans font-bold text-xs rounded-[16px] transition-all duration-200 cursor-pointer shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onThemeSave?.(selectedTheme);
+                    setThemeSuccessMsg("Theme configuration successfully applied!");
+                    setTimeout(() => setThemeSuccessMsg(null), 3500);
+                  }}
+                  className="px-6 py-2.5 bg-[#3B8D72] hover:bg-[#3B8D72]/90 text-white font-sans font-bold text-xs rounded-[16px] shadow-md shadow-[#3B8D72]/15 hover:shadow-[#3B8D72]/25 transition-all duration-250 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Save Changes
+                </button>
+              </div>
+            </div>
+
+            {/* Right side: Live Preview */}
+            <div className="lg:col-span-5 flex flex-col justify-between h-full">
+              <div className="p-5 soft-neumorphic rounded-[24px] flex flex-col justify-between relative overflow-hidden flex-1 shadow-sm border border-slate-200/80">
+                <div className="space-y-4 text-left">
+                  <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-extrabold flex items-center gap-1.5">
+                    <Eye className="w-3.5 h-3.5 text-[#3B8D72]" /> Theme Preview Card
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
+                    This live preview card renders instantly using the selected colors to showcase your active appearance preference.
+                  </p>
+
+                  {/* Inner Miniature replica showing chosen style */}
+                  <div className="p-1 rounded-[22px] bg-slate-100 border border-slate-200/40 relative overflow-hidden shadow-inner">
+                    <div className={
+                      selectedTheme === "dark" || (selectedTheme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+                        ? "dark text-white"
+                        : "text-[#1E293B]"
+                    }>
+                      <div className="premium-card p-4 space-y-3 border border-slate-200 rounded-[20px] shadow-sm text-slate-800 bg-white select-none transition-all duration-300">
+                        
+                        {/* Miniature replicate Header */}
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#3B8D72] animate-pulse" />
+                            <span className="text-[8px] font-mono tracking-wider font-extrabold text-slate-400">GIS_MAPPING // PREVIEW</span>
+                          </div>
+                          <span className="text-[7.5px] font-mono text-slate-400 font-bold">10:37 AM</span>
+                        </div>
+
+                        {/* Miniature replicate KPI content */}
+                        <div className="space-y-1 text-left">
+                          <span className="text-[8px] font-mono tracking-wider text-slate-450 uppercase font-bold block">
+                            ACTIVE CASE INCIDENTS
+                          </span>
+                          <div className="flex items-baseline justify-between">
+                            <span className="text-xl font-extrabold text-slate-850 tracking-tight font-sans">
+                              1,248
+                            </span>
+                            <span className="text-[9px] font-mono font-bold text-[#3B8D72] px-1.5 py-0.2 bg-[#3B8D72]/10 border border-[#3B8D72]/20 rounded-full">
+                              -8.4%
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Miniature replicate sparkline */}
+                        <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 text-[8px] font-mono text-slate-450">
+                          <span className="font-bold">STATUS: TRACKED</span>
+                          <svg className="w-16 h-5 overflow-visible" viewBox="0 0 100 30" preserveAspectRatio="none">
+                            <path d="M 0,20 L 15,10 L 30,15 L 45,5 L 60,18 L 80,12 L 100,8" fill="none" stroke="#3B8D72" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[9px] font-mono text-slate-400 font-bold">
+                  <span className="uppercase">PREVIEW_ENGINE // STANDBY</span>
+                  <span>v1.0.0</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
 
         <div className="border-t border-slate-100 pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-400 font-bold">
-          <span>SECURITY LEVEL ASSIGNMENT: FULL CLEARANCE</span>
-          <span>BUILD VERSION: v1.12.4 SECURE_REPLICATED</span>
+          <span>{activeTab === "appearance" ? "THEME RESOLUTION: AUTOMATIC" : "SECURITY LEVEL ASSIGNMENT: FULL CLEARANCE"}</span>
+          <span>{activeTab === "appearance" ? "PREVIEW MODE: GL_RENDER" : "BUILD VERSION: v1.12.4 SECURE_REPLICATED"}</span>
         </div>
       </div>
     </motion.div>

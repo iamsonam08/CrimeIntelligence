@@ -22,6 +22,19 @@ export default function App() {
   const [activePage, setActivePage] = useState<ActivePage>('dashboard');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isQuickActionOpen, setIsQuickActionOpen] = useState(false);
+  
+  // Theme state persisted in LocalStorage
+  const [savedTheme, setSavedTheme] = useState<"light" | "dark" | "system">(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("crimeops-theme");
+      if (stored === "light" || stored === "dark" || stored === "system") {
+        return stored;
+      }
+    }
+    return "light"; // Default to classic light theme
+  });
+
+  const [activeSettingsTab, setActiveSettingsTab] = useState<"security" | "appearance">("security");
 
   const quickActionRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +48,33 @@ export default function App() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Sync theme with document element
+  useEffect(() => {
+    const root = document.documentElement;
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const handleThemeChange = () => {
+      if (savedTheme === "dark") {
+        root.classList.add("dark");
+      } else if (savedTheme === "light") {
+        root.classList.remove("dark");
+      } else if (savedTheme === "system") {
+        if (mediaQuery.matches) {
+          root.classList.add("dark");
+        } else {
+          root.classList.remove("dark");
+        }
+      }
+    };
+
+    handleThemeChange();
+
+    if (savedTheme === "system") {
+      mediaQuery.addEventListener("change", handleThemeChange);
+      return () => mediaQuery.removeEventListener("change", handleThemeChange);
+    }
+  }, [savedTheme]);
 
   // Determine current page title and subtitle
   const getHeaderInfo = () => {
@@ -65,6 +105,12 @@ export default function App() {
           subtitle: "Live Telemetry Feeds, Critical Event Logs & Computer-Aided Dispatch Updates"
         };
       case 'settings':
+        if (activeSettingsTab === "appearance") {
+          return {
+            title: "Appearance",
+            subtitle: "Choose how CrimeOps appears on your device."
+          };
+        }
         return {
           title: "Clearance & Access Settings",
           subtitle: "Biometric Policy Management, Agency Connectors & Cryptographic System Audit Logs"
@@ -92,7 +138,17 @@ export default function App() {
       case 'alerts':
         return <AlertsView />;
       case 'settings':
-        return <SettingsView />;
+        return (
+          <SettingsView 
+            activeTab={activeSettingsTab}
+            onTabChange={setActiveSettingsTab}
+            savedTheme={savedTheme}
+            onThemeSave={(theme) => {
+              setSavedTheme(theme);
+              localStorage.setItem("crimeops-theme", theme);
+            }}
+          />
+        );
       default:
         return <DashboardView />;
     }

@@ -119,3 +119,209 @@
 .bg-glow-spot {
   background: radial-gradient(circle, rgba(59, 141, 114, 0.08) 0%, transparent 70%);
 }
+
+/* =============================================================
+ * CRIME_OPS PREMIUM DARK COMMAND THEME (CHARCOAL & MUTED MINT)
+ * ============================================================= */
+.dark body {
+  background-color: #0B0D0C !important;
+  color: #F8FAFC !important;
+}
+
+.dark #crime-intel-app-root {
+  background-color: #0B0D0C !important;
+  color: #F8FAFC !important;
+}
+
+/* Background elements glow adjustments in dark mode */
+.dark .blur-\[120px\] {
+  opacity: 0.4 !important;
+}
+
+/* White background cards & panels -> Soft charcoal */
+.dark .bg-white {
+  background-color: #151817 !important;
+}
+
+.dark .bg-white\/60 {
+  background-color: rgba(21, 24, 23, 0.6) !important;
+}
+
+.dark .bg-white\/80 {
+  background-color: rgba(21, 24, 23, 0.8) !important;
+}
+
+.dark .bg-white\/85 {
+  background-color: rgba(21, 24, 23, 0.85) !important;
+}
+
+.dark .bg-white\/90 {
+  background-color: rgba(21, 24, 23, 0.9) !important;
+}
+
+.dark .bg-white\/95 {
+  background-color: rgba(21, 24, 23, 0.95) !important;
+}
+
+.dark .bg-slate-50 {
+  background-color: #101211 !important;
+}
+
+.dark .bg-slate-50\/40 {
+  background-color: rgba(16, 18, 17, 0.4) !important;
+}
+
+.dark .bg-slate-50\/50 {
+  background-color: rgba(16, 18, 17, 0.5) !important;
+}
+
+.dark .bg-slate-50\/80 {
+  background-color: rgba(16, 18, 17, 0.8) !important;
+}
+
+.dark .bg-slate-100 {
+  background-color: #1E2120 !important;
+}
+
+.dark .bg-slate-150 {
+  background-color: #101211 !important;
+}
+
+/* Borders -> Fine graphite/smoke lines */
+.dark .border-slate-100 {
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark .border-slate-200 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .border-slate-200\/60 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .border-slate-200\/80 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .border-slate-300 {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Glassmorphism card overrides */
+.dark .premium-card {
+  background-color: rgba(21, 24, 23, 0.75) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5),
+              0 2px 8px -1px rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark .premium-card-hover:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6) !important;
+}
+
+.dark .soft-neumorphic {
+  background-color: rgba(21, 24, 23, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5),
+              0 2px 8px -1px rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark .soft-neumorphic:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6) !important;
+}
+
+.dark .soft-neumorphic-input {
+  background: rgba(16, 18, 17, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #F8FAFC !important;
+}
+
+.dark .liquid-glass {
+  background: rgba(21, 24, 23, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05),
+              0 15px 35px -10px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Typography Colors -> Contrast-optimized for dark display */
+.dark .text-slate-800 {
+  color: #F8FAFC !important;
+}
+
+.dark .text-slate-700 {
+  color: #E2E8F0 !important;
+}
+
+.dark .text-slate-600 {
+  color: #94A3B8 !important;
+}
+
+.dark .text-slate-550 {
+  color: #94A3B8 !important;
+}
+
+.dark .text-slate-500 {
+  color: #64748B !important;
+}
+
+.dark .text-slate-450 {
+  color: #64748B !important;
+}
+
+.dark .text-slate-400 {
+  color: #64748B !important;
+}
+
+.dark .text-\[\#1E293B\] {
+  color: #F8FAFC !important;
+}
+
+.dark .text-\[\#64748B\] {
+  color: #94A3B8 !important;
+}
+
+/* Inputs, Range Sliders, and Form Fields */
+.dark input[type="text"],
+.dark input[type="password"],
+.dark select {
+  background-color: #121413 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #F8FAFC !important;
+}
+
+.dark input[type="text"]:focus,
+.dark input[type="password"]:focus,
+.dark select:focus {
+  border-color: rgba(59, 141, 114, 0.5) !important;
+}
+
+.dark input[type="range"] {
+  background-color: #222524 !important;
+}
+
+/* Scrollbar adjustment in dark mode */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Blueprints & wireframe adjustments */
+.dark .wireframe-mesh {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.012) 1px, transparent 1px) !important;
+}
+
+/* Recharts Tooltip overrides */
+.dark .recharts-default-tooltip {
+  background-color: rgba(21, 24, 23, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
