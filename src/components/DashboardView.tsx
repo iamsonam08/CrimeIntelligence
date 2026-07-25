@@ -35,7 +35,7 @@ export function DashboardView() {
             <h3 className="text-xs font-mono tracking-wider text-slate-500 uppercase">Spatial Mapping</h3>
             <div className="h-px flex-1 bg-slate-200 mx-4" />
           </div>
-          <PlaceholderCard label="Crime Heatmap" id="heatmap-placeholder" />
+          <PlaceholderCard label="Crime Heatmap" id="heatmap-placeholder" realHotspots={hotspots} />
         </section>
 
         {/* Section 3: Large placeholder labeled: Criminal Network */}
@@ -55,7 +55,7 @@ export function DashboardView() {
             <h3 className="text-xs font-mono tracking-wider text-slate-500 uppercase">Temporal Predictive Modeling</h3>
             <div className="h-px flex-1 bg-slate-200 mx-4" />
           </div>
-          <PlaceholderCard label="Prediction Analytics" id="prediction-placeholder" />
+         <PlaceholderCard label="Prediction Analytics" id="prediction-placeholder" realRisk={risk} />
         </section>
 
         {/* Section 5: Placeholder labeled: Recent Alerts */}

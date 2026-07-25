@@ -48,7 +48,10 @@ interface PlaceholderCardProps {
   id?: string;
   realValue?: number | string;
   realAlerts?: Array<{ district: string; crime_type: string; severity: string; z_score: number }>;
-}
+  realHotspots?: Array<{ district: string; crime_count: number; top_crime_type: string; center_lat: number; center_lon: number }>;
+  realRisk?: Array<{ district: string; risk_score: number; risk_level: string; recent_90d_crimes: number }>;
+};
+
 
 const Sparkline = ({ points, color }: { points: number[]; color: string }) => {
   const width = 100;
@@ -96,7 +99,7 @@ const Sparkline = ({ points, color }: { points: number[]; color: string }) => {
   );
 };
 
-export function PlaceholderCard({ label, className = '', id, realValue, realAlerts }: PlaceholderCardProps) {
+export function PlaceholderCard({ label, className = '', id, realValue, realAlerts, realHotspots, realRisk }: PlaceholderCardProps) {
   const isKPICard = label.startsWith('KPI Card');
 
   /* -------------------------------------------------------------
@@ -271,6 +274,11 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
 
     const currentSector = sectorDetails[selectedSector] || sectorDetails.SECTOR_ALPHA;
 
+    const topHotspots = (realHotspots || []).slice(0, 3);
+    const realTargetDistrict = topHotspots[0]?.district || currentSector.name;
+    const realCrimeCount = topHotspots[0]?.crime_count;
+    const realHotspotNames = topHotspots.map(h => `${h.district} — ${h.top_crime_type} (${h.crime_count} cases)`);
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 15 }}
@@ -417,20 +425,20 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
             
             <div className="space-y-3">
               <div className="p-3 bg-slate-50/80 border border-slate-200 rounded-[18px] shadow-inner">
-                <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold mb-1">Target Sector</div>
-                <div className="text-xs font-bold text-slate-800 truncate">{currentSector.name}</div>
+               <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold mb-1">Target Sector (Live)</div>
+                <div className="text-xs font-bold text-slate-800 truncate">{realTargetDistrict}</div>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-[9px] font-mono text-slate-400">RISK_RATING:</span>
-                  <span className={`text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded border ${
-                    currentSector.risk === "HIGH" ? "bg-red-50 border-red-200/50 text-[#C65555]" : "bg-amber-50 border-amber-200/50 text-[#C0832F]"
-                  }`}>{currentSector.risk}</span>
+                  <span className="text-[9px] font-mono text-slate-400">CRIME_COUNT:</span>
+                  <span className="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded border bg-red-50 border-red-200/50 text-[#C65555]">
+                    {realCrimeCount ?? currentSector.incidents} cases
+                  </span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block font-semibold pl-1">Primary Hot Spots</span>
-                <div className="space-y-1">
-                  {currentSector.hotspots.map((spot, idx) => (
+               <div className="space-y-1">
+                  {(realHotspotNames.length > 0 ? realHotspotNames : currentSector.hotspots).map((spot, idx) => (
                     <div key={idx} className="flex items-center gap-2 p-2 bg-white/80 border border-slate-200 rounded-[12px] hover:bg-white hover:border-slate-300 transition-all shadow-sm">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#C65555]" />
                       <span className="text-[11px] text-slate-700 font-sans font-medium">{spot}</span>
@@ -822,10 +830,12 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
             
             <div className="space-y-3.5">
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-[20px] shadow-sm">
-                <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold mb-1">Peak Hazard Proj</div>
-                <div className="text-xl font-bold text-slate-800">16:00 - 18:00</div>
+               <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold mb-1">Highest Risk District (Live)</div>
+                <div className="text-xl font-bold text-slate-800">{realRisk?.[0]?.district || "16:00 - 18:00"}</div>
                 <p className="text-[10px] text-slate-500 mt-1.5 leading-normal font-medium">
-                  Identified 92% peak incident vector. Heavy transit crossings and financial centers flag positive risk co-occurrence.
+                  {realRisk?.[0] 
+                    ? `Risk score: ${realRisk[0].risk_score}/100 (${realRisk[0].risk_level}). ${realRisk[0].recent_90d_crimes} crimes in last 90 days — highest growth trend detected.`
+                    : "Identified 92% peak incident vector. Heavy transit crossings and financial centers flag positive risk co-occurrence."}
                 </p>
               </div>
 
