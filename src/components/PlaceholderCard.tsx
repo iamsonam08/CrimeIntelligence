@@ -46,6 +46,8 @@ interface PlaceholderCardProps {
   label: string;
   className?: string;
   id?: string;
+  realValue?: number | string;
+  realAlerts?: Array<{ district: string; crime_type: string; severity: string; z_score: number }>;
 }
 
 const Sparkline = ({ points, color }: { points: number[]; color: string }) => {
@@ -94,9 +96,9 @@ const Sparkline = ({ points, color }: { points: number[]; color: string }) => {
   );
 };
 
-export function PlaceholderCard({ label, className = '', id }: PlaceholderCardProps) {
+export function PlaceholderCard({ label, className = '', id, realValue, realAlerts }: PlaceholderCardProps) {
   const isKPICard = label.startsWith('KPI Card');
-  
+
   /* -------------------------------------------------------------
    * 1. KEY PERFORMANCE INDICATORS (KPI) CARDS (Enterprise Glassmorphism)
    * ------------------------------------------------------------- */
@@ -156,6 +158,7 @@ export function PlaceholderCard({ label, className = '', id }: PlaceholderCardPr
     
     const index = parseInt(cardNumber) - 1;
     const item = kpis[index] || kpis[0];
+    const displayValue = (realValue !== undefined && realValue !== null) ? realValue.toString() : item.value;
 
     return (
       <motion.div
@@ -195,7 +198,7 @@ export function PlaceholderCard({ label, className = '', id }: PlaceholderCardPr
             </span>
             <div className="flex items-baseline justify-between gap-2">
               <span className="text-3xl font-extrabold text-[#1E293B] tracking-tight font-sans">
-                {item.value}
+                {displayValue}
               </span>
               
               <span 
@@ -898,6 +901,19 @@ export function PlaceholderCard({ label, className = '', id }: PlaceholderCardPr
         desc: "2,400 active national threat matrix records incorporated securely into regional indexes."
       }
     ]);
+
+    useEffect(() => {
+      if (realAlerts && realAlerts.length > 0) {
+        setAlerts(realAlerts.slice(0, 10).map((a, idx) => ({
+          id: `AL_${idx}`,
+          severity: a.severity === 'High' ? 'CRITICAL' : 'WARNING',
+          title: `${a.crime_type} spike detected in ${a.district}`,
+          time: 'Live',
+          node: 'ANOMALY_DETECTOR',
+          desc: `Statistical anomaly detected — z-score ${a.z_score}. Unusual increase vs historical baseline.`
+        })));
+      }
+    }, [realAlerts]);
 
     const handleAddAlert = (e: React.FormEvent) => {
       e.preventDefault();
