@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = 'https://crime-analytics-api.onrender.com';
 
 export function useCrimeData() {
   const [stats, setStats] = useState<any>(null);
