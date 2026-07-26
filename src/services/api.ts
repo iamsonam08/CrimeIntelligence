@@ -38,6 +38,8 @@ export interface BackendHealth {
 }
 
 // Default/Stored Backend URL lookup
+export const DEFAULT_BACKEND_URL = 'https://crime-analytics-backend-21k4.onrender.com';
+
 export function getBackendUrl(): string {
   if (typeof window !== 'undefined') {
     const customUrl = localStorage.getItem('crimeops-backend-url');
@@ -47,10 +49,10 @@ export function getBackendUrl(): string {
   }
   const metaEnv = (import.meta as any).env || {};
   const envUrl = metaEnv.VITE_API_URL || metaEnv.VITE_BACKEND_URL;
-  if (envUrl) {
+  if (envUrl && envUrl.trim()) {
     return envUrl.trim().replace(/\/+$/, '');
   }
-  return ''; // Default relative /api or local origin
+  return DEFAULT_BACKEND_URL;
 }
 
 export function setBackendUrl(url: string): void {
@@ -67,73 +69,85 @@ export function setBackendUrl(url: string): void {
 export async function checkBackendHealth(): Promise<BackendHealth> {
   const baseUrl = getBackendUrl();
   const startTime = Date.now();
-  const targetUrl = baseUrl ? `${baseUrl}/api/health` : '/api/health';
+  
+  // Try several candidate health endpoints
+  const endpointsToTry = [
+    `${baseUrl}/api/health`,
+    `${baseUrl}/health`,
+    `${baseUrl}/api/kpis`,
+    `${baseUrl}/api/crimes`,
+    `${baseUrl}/crimes`,
+    `${baseUrl}/`
+  ];
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+  for (const targetUrl of endpointsToTry) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const res = await fetch(targetUrl, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
+      const res = await fetch(targetUrl, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json, text/plain, */*' },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
-    const pingMs = Date.now() - startTime;
+      const pingMs = Date.now() - startTime;
 
-    if (res.ok) {
-      const data = await res.json().catch(() => ({}));
-      return {
-        connected: true,
-        url: baseUrl || window.location.origin,
-        pingMs,
-        message: data.message || data.status || 'Backend connected & responsive',
-        lastChecked: new Date().toLocaleTimeString()
-      };
-    } else {
-      return {
-        connected: false,
-        url: baseUrl || window.location.origin,
-        pingMs,
-        message: `HTTP ${res.status}: ${res.statusText}`,
-        lastChecked: new Date().toLocaleTimeString()
-      };
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return {
+          connected: true,
+          url: baseUrl,
+          pingMs,
+          message: data.message || data.status || `Connected to backend endpoint (${targetUrl.replace(baseUrl, '')})`,
+          lastChecked: new Date().toLocaleTimeString()
+        };
+      }
+    } catch (err: any) {
+      // Continue to next candidate endpoint
     }
-  } catch (err: any) {
-    return {
-      connected: false,
-      url: baseUrl || 'Not configured',
-      message: err.name === 'AbortError' ? 'Connection timed out (4s)' : (err.message || 'Network error / CORS blocked'),
-      lastChecked: new Date().toLocaleTimeString()
-    };
   }
+
+  return {
+    connected: false,
+    url: baseUrl || 'Not configured',
+    message: 'Backend server not responding or initial Render cold-start in progress',
+    lastChecked: new Date().toLocaleTimeString()
+  };
 }
 
 // Fetch KPIs from backend or fallback
 export async function fetchKPIs(): Promise<{ data: KPIData[]; isLiveBackend: boolean; error?: string }> {
   const baseUrl = getBackendUrl();
-  const endpoint = baseUrl ? `${baseUrl}/api/kpis` : '/api/kpis';
+  const endpoints = [
+    `${baseUrl}/api/kpis`,
+    `${baseUrl}/api/analytics`,
+    `${baseUrl}/api/crimes/stats`,
+    `${baseUrl}/kpis`
+  ];
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+  for (const endpoint of endpoints) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const res = await fetch(endpoint, {
-      headers: { 'Accept': 'application/json' },
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
+      const res = await fetch(endpoint, {
+        headers: { 'Accept': 'application/json' },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
-    if (res.ok) {
-      const json = await res.json();
-      const kpiArray = Array.isArray(json) ? json : json.data;
-      if (Array.isArray(kpiArray) && kpiArray.length > 0) {
-        return { data: kpiArray, isLiveBackend: true };
+      if (res.ok) {
+        const json = await res.json();
+        const kpiArray = Array.isArray(json) ? json : (json.data || json.kpis || json.stats);
+        if (Array.isArray(kpiArray) && kpiArray.length > 0) {
+          return { data: kpiArray, isLiveBackend: true };
+        }
       }
+    } catch (e: any) {
+      // Try next endpoint
     }
-  } catch (e: any) {
-    // Fallback to local default data
   }
 
   return {
@@ -190,27 +204,45 @@ export async function fetchKPIs(): Promise<{ data: KPIData[]; isLiveBackend: boo
 // Fetch Recent Alerts from backend or fallback
 export async function fetchRecentAlerts(): Promise<{ data: AlertItem[]; isLiveBackend: boolean }> {
   const baseUrl = getBackendUrl();
-  const endpoint = baseUrl ? `${baseUrl}/api/alerts` : '/api/alerts';
+  const endpoints = [
+    `${baseUrl}/api/alerts`,
+    `${baseUrl}/api/crimes`,
+    `${baseUrl}/crimes`,
+    `${baseUrl}/alerts`
+  ];
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+  for (const endpoint of endpoints) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const res = await fetch(endpoint, {
-      headers: { 'Accept': 'application/json' },
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
+      const res = await fetch(endpoint, {
+        headers: { 'Accept': 'application/json' },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
-    if (res.ok) {
-      const json = await res.json();
-      const alertsArray = Array.isArray(json) ? json : json.data;
-      if (Array.isArray(alertsArray) && alertsArray.length > 0) {
-        return { data: alertsArray, isLiveBackend: true };
+      if (res.ok) {
+        const json = await res.json();
+        const alertsArray = Array.isArray(json) ? json : (json.data || json.crimes || json.alerts);
+        if (Array.isArray(alertsArray) && alertsArray.length > 0) {
+          // Normalize elements if they come from a general crimes endpoint
+          const mappedAlerts: AlertItem[] = alertsArray.map((item: any, idx: number) => ({
+            id: item.id || item._id || `ALT-${9000 + idx}`,
+            title: item.title || item.crimeType || item.type || item.description || 'Crime Incident Reported',
+            severity: item.severity || (item.priority === 'HIGH' ? 'CRITICAL' : item.priority === 'MEDIUM' ? 'ELEVATED' : 'MODERATE'),
+            location: item.location || item.address || item.district || 'Sector Jurisdiction',
+            time: item.time || item.createdAt || item.date || 'Recently reported',
+            category: item.category || item.type || 'Crime Report',
+            status: item.status || 'DISPATCHED',
+            description: item.description || item.details || ''
+          }));
+          return { data: mappedAlerts, isLiveBackend: true };
+        }
       }
+    } catch (e: any) {
+      // Try next
     }
-  } catch (e: any) {
-    // Fallback
   }
 
   return {
@@ -249,3 +281,4 @@ export async function fetchRecentAlerts(): Promise<{ data: AlertItem[]; isLiveBa
     ]
   };
 }
+

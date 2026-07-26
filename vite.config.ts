@@ -5,6 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    base: '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
@@ -12,25 +13,8 @@ export default defineConfig(() => {
       },
     },
     build: {
-      chunkSizeWarningLimit: 1500,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('motion')) {
-                return 'vendor-react';
-              }
-              if (id.includes('recharts')) {
-                return 'vendor-charts';
-              }
-              if (id.includes('lucide-react')) {
-                return 'vendor-icons';
-              }
-              return 'vendor';
-            }
-          },
-        },
-      },
+      chunkSizeWarningLimit: 2000,
+      outDir: 'dist',
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
