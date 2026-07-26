@@ -5,11 +5,8 @@
 
 import React from 'react';
 import { PlaceholderCard } from './PlaceholderCard';
-import { useCrimeData } from '../hooks/useCrimeData';
 
 export function DashboardView() {
-  const { stats, alerts, risk, hotspots } = useCrimeData();
-
   return (
     <div className="space-y-8" id="dashboard-view-content">
       {/* Section 1: Four equal KPI placeholder cards */}
@@ -20,10 +17,10 @@ export function DashboardView() {
           <span className="text-[10px] font-mono text-slate-400">LIVE FEED</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <PlaceholderCard label="KPI Card 1" id="kpi-card-1" realValue={stats?.total_crimes} />
-          <PlaceholderCard label="KPI Card 2" id="kpi-card-2" realValue={stats?.total_offenders} />
-          <PlaceholderCard label="KPI Card 3" id="kpi-card-3" realValue={hotspots?.length} />
-          <PlaceholderCard label="KPI Card 4" id="kpi-card-4" realValue={alerts?.length} />
+          <PlaceholderCard label="KPI Card 1" id="kpi-card-1" />
+          <PlaceholderCard label="KPI Card 2" id="kpi-card-2" />
+          <PlaceholderCard label="KPI Card 3" id="kpi-card-3" />
+          <PlaceholderCard label="KPI Card 4" id="kpi-card-4" />
         </div>
       </section>
 
@@ -35,7 +32,7 @@ export function DashboardView() {
             <h3 className="text-xs font-mono tracking-wider text-slate-500 uppercase">Spatial Mapping</h3>
             <div className="h-px flex-1 bg-slate-200 mx-4" />
           </div>
-          <PlaceholderCard label="Crime Heatmap" id="heatmap-placeholder" realHotspots={hotspots} />
+          <PlaceholderCard label="Crime Heatmap" id="heatmap-placeholder" />
         </section>
 
         {/* Section 3: Large placeholder labeled: Criminal Network */}
@@ -55,7 +52,7 @@ export function DashboardView() {
             <h3 className="text-xs font-mono tracking-wider text-slate-500 uppercase">Temporal Predictive Modeling</h3>
             <div className="h-px flex-1 bg-slate-200 mx-4" />
           </div>
-         <PlaceholderCard label="Prediction Analytics" id="prediction-placeholder" realRisk={risk} />
+          <PlaceholderCard label="Prediction Analytics" id="prediction-placeholder" />
         </section>
 
         {/* Section 5: Placeholder labeled: Recent Alerts */}
@@ -64,7 +61,7 @@ export function DashboardView() {
             <h3 className="text-xs font-mono tracking-wider text-slate-500 uppercase">Priority Event Stream</h3>
             <div className="h-px flex-1 bg-slate-200 mx-4" />
           </div>
-          <PlaceholderCard label="Recent Alerts" id="alerts-placeholder" realAlerts={alerts} />
+          <PlaceholderCard label="Recent Alerts" id="alerts-placeholder" />
         </section>
       </div>
     </div>

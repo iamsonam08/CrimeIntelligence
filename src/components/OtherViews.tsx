@@ -50,7 +50,8 @@ import {
   Sun,
   Moon,
   Monitor,
-  Palette
+  Palette,
+  RefreshCw
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -60,6 +61,7 @@ import {
   YAxis, 
   Tooltip 
 } from 'recharts';
+import { getBackendUrl, setBackendUrl, checkBackendHealth, BackendHealth } from '../services/api';
 
 /* -------------------------------------------------------------
  * 1. CRIME MAP VIEW CONSOLE (INTERACTIVE RADIAL GRID & DISPATCH CHIPS)
@@ -2067,6 +2069,36 @@ export function SettingsView({
   const [isCredentialActive, setIsCredentialActive] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
+  // Backend API Connector states
+  const [backendUrlInput, setBackendUrlInput] = useState<string>(() => getBackendUrl());
+  const [healthStatus, setHealthStatus] = useState<BackendHealth | null>(null);
+  const [isTestingBackend, setIsTestingBackend] = useState<boolean>(false);
+  const [apiMsg, setApiMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    checkBackendHealth().then(status => setHealthStatus(status));
+  }, []);
+
+  const handleTestBackend = async () => {
+    setIsTestingBackend(true);
+    setBackendUrl(backendUrlInput);
+    const result = await checkBackendHealth();
+    setHealthStatus(result);
+    setIsTestingBackend(false);
+    if (result.connected) {
+      setApiMsg(`Backend API connected successfully (${result.pingMs}ms)!`);
+    } else {
+      setApiMsg(`Backend ping notice: ${result.message}`);
+    }
+    setTimeout(() => setApiMsg(null), 4500);
+  };
+
+  const handleSaveBackendUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    setBackendUrl(backendUrlInput);
+    handleTestBackend();
+  };
+
   // Theme selection state for the edit session
   const [selectedTheme, setSelectedTheme] = useState<"light" | "dark" | "system">(savedTheme);
   const [themeSuccessMsg, setThemeSuccessMsg] = useState<string | null>(null);
@@ -2188,32 +2220,97 @@ export function SettingsView({
               </div>
             </div>
 
-            {/* Database Ingest Pipelines */}
+            {/* Database Ingest Pipelines / Backend API Connector */}
             <div className="p-5 soft-neumorphic rounded-[24px] flex flex-col justify-between relative overflow-hidden group">
               <div className="space-y-4">
-                <div className="flex items-center gap-2.5">
-                  <Key className="w-4 h-4 text-[#3B8D72]" />
-                  <h4 className="text-xs font-mono uppercase tracking-widest font-extrabold text-slate-800">API Node Connectors</h4>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Key className="w-4 h-4 text-[#3B8D72]" />
+                    <h4 className="text-xs font-mono uppercase tracking-widest font-extrabold text-slate-800">Backend API Node Connector</h4>
+                  </div>
+                  {healthStatus?.connected ? (
+                    <span className="text-[8.5px] font-mono px-2 py-0.5 bg-[#3B8D72]/10 border border-[#3B8D72]/20 text-[#3B8D72] rounded-full font-extrabold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#3B8D72] animate-pulse" /> LIVE CONNECTED
+                    </span>
+                  ) : (
+                    <span className="text-[8.5px] font-mono px-2 py-0.5 bg-[#C0832F]/10 border border-[#C0832F]/20 text-[#C0832F] rounded-full font-extrabold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#C0832F]" /> FALLBACK MODE
+                    </span>
+                  )}
                 </div>
+
                 <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
-                  Review integration pipes syncing intelligence files from federal networks, state dispatch systems, and county registries.
+                  Connect CrimeOps directly to your hosted backend API (Vercel, Express, Fastify, etc.) to load live database streams instead of static placeholders.
                 </p>
 
-                <div className="space-y-2 pt-1">
-                  <div className="p-2.5 bg-white border border-slate-200 rounded-[14px] flex items-center justify-between shadow-sm">
-                    <span className="text-xs font-sans font-bold text-slate-700">FED_CENTRAL_DB</span>
-                    <span className="text-[8.5px] font-mono px-2 py-0.5 bg-[#3B8D72]/10 border border-[#3B8D72]/20 text-[#3B8D72] rounded-full font-extrabold">ACTIVE</span>
+                {apiMsg && (
+                  <div className={`p-2.5 rounded-[14px] text-[10px] font-sans font-bold flex items-center gap-1.5 shadow-sm ${
+                    healthStatus?.connected 
+                      ? 'bg-[#3B8D72]/10 border border-[#3B8D72]/30 text-[#3B8D72]' 
+                      : 'bg-[#C0832F]/10 border border-[#C0832F]/30 text-[#C0832F]'
+                  }`}>
+                    <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>{apiMsg}</span>
                   </div>
-                  <div className="p-2.5 bg-white border border-slate-200 rounded-[14px] flex items-center justify-between shadow-sm">
-                    <span className="text-xs font-sans font-bold text-slate-700">REGIONAL_CAD_LINK</span>
-                    <span className="text-[8.5px] font-mono px-2 py-0.5 bg-[#3B8D72]/10 border border-[#3B8D72]/20 text-[#3B8D72] rounded-full font-extrabold">ACTIVE</span>
+                )}
+
+                <form onSubmit={handleSaveBackendUrl} className="space-y-2.5 pt-1">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider block">Backend Base URL (or /api)</label>
+                    <input 
+                      type="url" 
+                      placeholder="e.g. https://my-crimeops-backend.vercel.app" 
+                      value={backendUrlInput}
+                      onChange={(e) => setBackendUrlInput(e.target.value)}
+                      className="w-full px-4 py-2 bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 rounded-[18px] focus:outline-none focus:border-[#3B8D72]/50 shadow-inner font-mono"
+                    />
                   </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={isTestingBackend}
+                      className="flex-1 bg-[#3B8D72] hover:bg-[#3B8D72]/90 text-white font-sans font-bold text-xs py-2 rounded-[16px] transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      {isTestingBackend ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          Testing Ping...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Save & Connect
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleTestBackend}
+                      disabled={isTestingBackend}
+                      className="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 font-sans font-bold text-xs rounded-[16px] hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
+                    >
+                      Test Ping
+                    </button>
+                  </div>
+                </form>
+
+                <div className="space-y-1.5 pt-1 text-[10px] font-mono text-slate-500">
+                  <div className="flex justify-between items-center bg-white/70 p-2 rounded-[12px] border border-slate-200">
+                    <span className="font-bold">HEALTH ENDPOINT:</span>
+                    <span className="text-slate-700 font-semibold">{backendUrlInput ? `${backendUrlInput}/api/health` : '/api/health'}</span>
+                  </div>
+                  {healthStatus?.pingMs !== undefined && (
+                    <div className="flex justify-between items-center px-1 text-[9px] text-slate-400 font-bold">
+                      <span>LATENCY: {healthStatus.pingMs}ms</span>
+                      <span>LAST CHECK: {healthStatus.lastChecked}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-[9px] font-mono text-slate-400 font-bold">
-                <span className="flex items-center gap-1"><Database className="w-3.5 h-3.5 text-slate-400" /> 5 CORE CHANNELS ACTIVE</span>
-                <span className="text-[#3B8D72] hover:underline cursor-pointer">MANAGE APIS</span>
+                <span className="flex items-center gap-1"><Database className="w-3.5 h-3.5 text-slate-400" /> REST API PIPELINE</span>
+                <span className="text-[#3B8D72]">CONFIGURED</span>
               </div>
             </div>
 

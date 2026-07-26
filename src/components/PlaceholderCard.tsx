@@ -41,17 +41,13 @@ import {
   YAxis, 
   Tooltip 
 } from 'recharts';
+import { fetchKPIs, fetchRecentAlerts, KPIData, AlertItem } from '../services/api';
 
 interface PlaceholderCardProps {
   label: string;
   className?: string;
   id?: string;
-  realValue?: number | string;
-  realAlerts?: Array<{ district: string; crime_type: string; severity: string; z_score: number }>;
-  realHotspots?: Array<{ district: string; crime_count: number; top_crime_type: string; center_lat: number; center_lon: number }>;
-  realRisk?: Array<{ district: string; risk_score: number; risk_level: string; recent_90d_crimes: number }>;
-};
-
+}
 
 const Sparkline = ({ points, color }: { points: number[]; color: string }) => {
   const width = 100;
@@ -99,8 +95,23 @@ const Sparkline = ({ points, color }: { points: number[]; color: string }) => {
   );
 };
 
-export function PlaceholderCard({ label, className = '', id, realValue, realAlerts, realHotspots, realRisk }: PlaceholderCardProps) {
+export function PlaceholderCard({ label, className = '', id }: PlaceholderCardProps) {
   const isKPICard = label.startsWith('KPI Card');
+  
+  // Live backend data state for KPIs
+  const [fetchedKPIs, setFetchedKPIs] = useState<KPIData[] | null>(null);
+  const [isLiveBackendKPI, setIsLiveBackendKPI] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isKPICard) {
+      fetchKPIs().then(res => {
+        if (res.data && res.data.length > 0) {
+          setFetchedKPIs(res.data);
+          setIsLiveBackendKPI(res.isLiveBackend);
+        }
+      });
+    }
+  }, [isKPICard]);
 
   /* -------------------------------------------------------------
    * 1. KEY PERFORMANCE INDICATORS (KPI) CARDS (Enterprise Glassmorphism)
@@ -108,15 +119,15 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
   if (isKPICard) {
     const cardNumber = label.split(' ')[2] || '1';
     
-    const kpis = [
+    const defaultKpis = [
       {
         title: 'Total Crime Cases',
         value: '1,248',
         trend: '↓ 8.4%',
-        trendColor: '#3B8D72', // muted mint for decreasing crime
+        trendColor: '#3B8D72',
         updateTime: 'Last updated 2 min ago',
         status: 'SYNCED',
-        color: '#796B9A', // Muted Purple
+        color: '#796B9A',
         sparkline: [142, 138, 135, 131, 129, 126, 124],
         insight: 'Patrol latency optimized',
         icon: <Shield className="w-5 h-5 text-[#796B9A]" strokeWidth={1.5} />
@@ -125,10 +136,10 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
         title: 'Active Criminals',
         value: '342',
         trend: '↓ 3.1%',
-        trendColor: '#3B8D72', // muted mint
+        trendColor: '#3B8D72',
         updateTime: 'Last updated 5 min ago',
         status: 'TRACKED',
-        color: '#4D7FA9', // Muted Blue
+        color: '#4D7FA9',
         sparkline: [365, 360, 355, 348, 350, 345, 342],
         insight: '14 apprehensions this week',
         icon: <Users className="w-5 h-5 text-[#4D7FA9]" strokeWidth={1.5} />
@@ -137,10 +148,10 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
         title: 'High Risk Areas',
         value: '14 Sectors',
         trend: '↑ 1.2%',
-        trendColor: '#C0832F', // muted amber
+        trendColor: '#C0832F',
         updateTime: 'Last updated 10 min ago',
         status: 'ALERTED',
-        color: '#C0832F', // Muted Amber
+        color: '#C0832F',
         sparkline: [12, 13, 13, 14, 14, 13, 14],
         insight: 'Sector 4 anomaly detected',
         icon: <MapPin className="w-5 h-5 text-[#C0832F]" strokeWidth={1.5} />
@@ -149,10 +160,10 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
         title: 'Active Alerts',
         value: '18',
         trend: '+5.3%',
-        trendColor: '#C65555', // muted coral
+        trendColor: '#C65555',
         updateTime: 'Last updated 1 min ago',
         status: 'CRITICAL',
-        color: '#C65555', // Muted Coral
+        color: '#C65555',
         sparkline: [8, 12, 15, 14, 18, 16, 18],
         insight: '9 pending dispatcher signoff',
         icon: <Bell className="w-5 h-5 text-[#C65555]" strokeWidth={1.5} />
@@ -160,8 +171,21 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
     ];
     
     const index = parseInt(cardNumber) - 1;
-    const item = kpis[index] || kpis[0];
-    const displayValue = (realValue !== undefined && realValue !== null) ? realValue.toString() : item.value;
+    const baseItem = defaultKpis[index] || defaultKpis[0];
+    const liveItem = fetchedKPIs && fetchedKPIs[index];
+
+    const item = {
+      title: liveItem?.title || baseItem.title,
+      value: liveItem?.value || baseItem.value,
+      trend: liveItem?.trend || baseItem.trend,
+      trendColor: liveItem?.trendColor || baseItem.trendColor,
+      updateTime: liveItem?.updateTime || baseItem.updateTime,
+      status: liveItem?.status || baseItem.status,
+      color: liveItem?.color || baseItem.color,
+      sparkline: liveItem?.sparkline || baseItem.sparkline,
+      insight: liveItem?.insight || baseItem.insight,
+      icon: baseItem.icon
+    };
 
     return (
       <motion.div
@@ -201,7 +225,7 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
             </span>
             <div className="flex items-baseline justify-between gap-2">
               <span className="text-3xl font-extrabold text-[#1E293B] tracking-tight font-sans">
-                {displayValue}
+                {item.value}
               </span>
               
               <span 
@@ -273,11 +297,6 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
     };
 
     const currentSector = sectorDetails[selectedSector] || sectorDetails.SECTOR_ALPHA;
-
-    const topHotspots = (realHotspots || []).slice(0, 3);
-    const realTargetDistrict = topHotspots[0]?.district || currentSector.name;
-    const realCrimeCount = topHotspots[0]?.crime_count;
-    const realHotspotNames = topHotspots.map(h => `${h.district} — ${h.top_crime_type} (${h.crime_count} cases)`);
 
     return (
       <motion.div
@@ -425,20 +444,20 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
             
             <div className="space-y-3">
               <div className="p-3 bg-slate-50/80 border border-slate-200 rounded-[18px] shadow-inner">
-               <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold mb-1">Target Sector (Live)</div>
-                <div className="text-xs font-bold text-slate-800 truncate">{realTargetDistrict}</div>
+                <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold mb-1">Target Sector</div>
+                <div className="text-xs font-bold text-slate-800 truncate">{currentSector.name}</div>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-[9px] font-mono text-slate-400">CRIME_COUNT:</span>
-                  <span className="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded border bg-red-50 border-red-200/50 text-[#C65555]">
-                    {realCrimeCount ?? currentSector.incidents} cases
-                  </span>
+                  <span className="text-[9px] font-mono text-slate-400">RISK_RATING:</span>
+                  <span className={`text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded border ${
+                    currentSector.risk === "HIGH" ? "bg-red-50 border-red-200/50 text-[#C65555]" : "bg-amber-50 border-amber-200/50 text-[#C0832F]"
+                  }`}>{currentSector.risk}</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest block font-semibold pl-1">Primary Hot Spots</span>
-               <div className="space-y-1">
-                  {(realHotspotNames.length > 0 ? realHotspotNames : currentSector.hotspots).map((spot, idx) => (
+                <div className="space-y-1">
+                  {currentSector.hotspots.map((spot, idx) => (
                     <div key={idx} className="flex items-center gap-2 p-2 bg-white/80 border border-slate-200 rounded-[12px] hover:bg-white hover:border-slate-300 transition-all shadow-sm">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#C65555]" />
                       <span className="text-[11px] text-slate-700 font-sans font-medium">{spot}</span>
@@ -830,12 +849,10 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
             
             <div className="space-y-3.5">
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-[20px] shadow-sm">
-               <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold mb-1">Highest Risk District (Live)</div>
-                <div className="text-xl font-bold text-slate-800">{realRisk?.[0]?.district || "16:00 - 18:00"}</div>
+                <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold mb-1">Peak Hazard Proj</div>
+                <div className="text-xl font-bold text-slate-800">16:00 - 18:00</div>
                 <p className="text-[10px] text-slate-500 mt-1.5 leading-normal font-medium">
-                  {realRisk?.[0] 
-                    ? `Risk score: ${realRisk[0].risk_score}/100 (${realRisk[0].risk_level}). ${realRisk[0].recent_90d_crimes} crimes in last 90 days — highest growth trend detected.`
-                    : "Identified 92% peak incident vector. Heavy transit crossings and financial centers flag positive risk co-occurrence."}
+                  Identified 92% peak incident vector. Heavy transit crossings and financial centers flag positive risk co-occurrence.
                 </p>
               </div>
 
@@ -911,19 +928,6 @@ export function PlaceholderCard({ label, className = '', id, realValue, realAler
         desc: "2,400 active national threat matrix records incorporated securely into regional indexes."
       }
     ]);
-
-    useEffect(() => {
-      if (realAlerts && realAlerts.length > 0) {
-        setAlerts(realAlerts.slice(0, 10).map((a, idx) => ({
-          id: `AL_${idx}`,
-          severity: a.severity === 'High' ? 'CRITICAL' : 'WARNING',
-          title: `${a.crime_type} spike detected in ${a.district}`,
-          time: 'Live',
-          node: 'ANOMALY_DETECTOR',
-          desc: `Statistical anomaly detected — z-score ${a.z_score}. Unusual increase vs historical baseline.`
-        })));
-      }
-    }, [realAlerts]);
 
     const handleAddAlert = (e: React.FormEvent) => {
       e.preventDefault();
