@@ -41,7 +41,7 @@ import {
   YAxis, 
   Tooltip 
 } from 'recharts';
-import { fetchKPIs, fetchRecentAlerts, KPIData, AlertItem } from '../services/api';
+import { fetchKPIs, fetchRecentAlerts, fetchHotspots, fetchNetwork, fetchPredictRisk, KPIData, AlertItem, HotspotCluster, NetworkResponse, RiskScoreData } from '../services/api';
 
 interface PlaceholderCardProps {
   label: string;

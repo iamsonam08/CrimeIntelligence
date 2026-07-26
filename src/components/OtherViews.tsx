@@ -61,7 +61,7 @@ import {
   YAxis, 
   Tooltip 
 } from 'recharts';
-import { getBackendUrl, setBackendUrl, checkBackendHealth, BackendHealth } from '../services/api';
+import { getBackendUrl, setBackendUrl, checkBackendHealth, fetchStats, fetchCrimes, fetchHotspots, fetchNetwork, fetchAlerts, fetchPredictRisk, BackendHealth } from '../services/api';
 
 /* -------------------------------------------------------------
  * 1. CRIME MAP VIEW CONSOLE (INTERACTIVE RADIAL GRID & DISPATCH CHIPS)
@@ -1169,6 +1169,15 @@ export function CriminalNetworkView() {
 export function PredictionsView() {
   const [selectedConfidence, setSelectedConfidence] = useState<"HIGH" | "ALL">("HIGH");
   const [timelineFilter, setTimelineFilter] = useState<number>(85);
+  const [districtRisks, setDistrictRisks] = useState<{ district: string; risk_score: number; risk_level: string; recent_90d_crimes: number }[]>([]);
+
+  useEffect(() => {
+    fetchPredictRisk().then(res => {
+      if (res.isLiveBackend && res.data && res.data.district_risk_scores) {
+        setDistrictRisks(res.data.district_risk_scores);
+      }
+    });
+  }, []);
 
   const mockForecastTimeline = [
     { hour: '00:00', generalRisk: 30, criticalRisk: 10 },
@@ -1293,11 +1302,31 @@ export function PredictionsView() {
           {/* Right Parameters Box */}
           <div className="lg:col-span-4 flex flex-col justify-between h-full text-left space-y-4">
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-[20px] space-y-3 shadow-sm">
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Forecasting Model Details</div>
-              <div className="text-xs font-sans font-bold text-slate-700">Model: Recurrent Neural (v5.1)</div>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
-                Predictive accuracy evaluates historic variables, seasonal heatmaps, and spatial co-occurrence algorithms to model daily peak risk zones.
-              </p>
+              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">
+                {districtRisks.length > 0 ? 'Live Backend District Risk Scores' : 'Forecasting Model Details'}
+              </div>
+              {districtRisks.length > 0 ? (
+                <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1 text-left">
+                  {districtRisks.map((d, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200/80 text-xs">
+                      <span className="font-bold text-slate-700">{d.district}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-slate-400">Score: {d.risk_score}</span>
+                        <span className={`text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded ${
+                          d.risk_level === 'High' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-amber-50 text-amber-600 border border-amber-200'
+                        }`}>{d.risk_level}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <div className="text-xs font-sans font-bold text-slate-700">Model: Recurrent Neural (v5.1)</div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed font-sans font-medium">
+                    Predictive accuracy evaluates historic variables, seasonal heatmaps, and spatial co-occurrence algorithms to model daily peak risk zones.
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Slider calibrator */}
@@ -1445,6 +1474,30 @@ export function AlertsView() {
   const [newIncidentSector, setNewIncidentSector] = useState("SEC_ALPHA");
   const [newIncidentPriority, setNewIncidentPriority] = useState<'Critical' | 'High' | 'Medium' | 'Low'>("High");
   const [newIncidentLocation, setNewIncidentLocation] = useState("");
+
+  useEffect(() => {
+    fetchCrimes(25).then(res => {
+      if (res.isLiveBackend && res.data.length > 0) {
+        const liveAlerts: OperationalAlert[] = res.data.map((c) => ({
+          id: c.crime_id,
+          priority: c.case_status === 'Under Investigation' ? 'Critical' : 'High',
+          title: `${c.crime_type} (${c.district})`,
+          aiExplanation: `Real-time crime record from backend. Offender: ${c.offender_name} (${c.offender_id}). Co-offenders: ${c.co_offenders || 'None'}. Case Status: ${c.case_status}.`,
+          location: `${c.district} (Lat: ${c.latitude.toFixed(2)}, Lon: ${c.longitude.toFixed(2)})`,
+          time: c.date,
+          confidenceScore: 95,
+          recommendedAction: `Investigate case status '${c.case_status}' in ${c.district}. Check co-offenders: ${c.co_offenders || 'None'}.`,
+          sector: c.district.toUpperCase().replace(/\s+/g, '_'),
+          timestamp: c.date,
+          status: 'Active'
+        }));
+        setAlerts(liveAlerts);
+        if (liveAlerts.length > 0) {
+          setSelectedAlertId(liveAlerts[0].id);
+        }
+      }
+    });
+  }, []);
 
   const [checklist, setChecklist] = useState<Record<string, Record<string, boolean>>>({
     "ALRT-109X": { notify: true, patrol: false, comms: false, log: true },
